@@ -167,15 +167,25 @@ export function DedicationsPage() {
       ) : (
         <ul className="mt-3 space-y-3">
           {list.data?.map((d) => (
-            <li key={d.id} className="border border-rule bg-card p-4">
-              <p className="text-sm font-semibold">
-                {d.track.name} — {d.track.artists.join(', ')}
-              </p>
-              <p className="mt-1 text-sm text-ink-soft">
-                Dla: {d.recipient} · Od: {d.anonymous ? 'Anonimowo' : (d.sender ?? '—')}
-              </p>
-              {d.message && <p className="mt-1 text-sm">{d.message}</p>}
-              <p className="mt-1 text-xs text-ink-faint">Dzień: {d.targetDate}</p>
+            <li key={d.id} className="flex gap-3 border border-rule bg-card p-4">
+              {d.track.imageUrl && (
+                <img src={d.track.imageUrl} alt="" className="h-14 w-14 shrink-0 object-cover" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold leading-tight">
+                  {d.track.name}
+                </p>
+                <p className="text-xs text-ink-soft">{d.track.artists.join(', ')}</p>
+                <p className="mt-1 text-sm">
+                  <span className="font-semibold">Dla:</span> {d.recipient}
+                </p>
+                <p className="text-sm text-ink-soft">
+                  <span className="font-semibold text-ink">Od:</span>{' '}
+                  {d.anonymous ? 'Anonimowo' : (d.sender ?? '—')}
+                </p>
+                {d.message && <p className="mt-1 text-sm italic">„{d.message}”</p>}
+                <p className="mt-1 text-xs text-ink-faint">Dzień: {d.targetDate}</p>
+              </div>
             </li>
           ))}
         </ul>
