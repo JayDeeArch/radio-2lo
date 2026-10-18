@@ -1,0 +1,1 @@
+ALTER TABLE dedications ADD COLUMN IF NOT EXISTS request_id uuid REFERENCES requests(id) ON DELETE SET NULL;

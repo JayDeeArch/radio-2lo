@@ -180,6 +180,7 @@ export const dedications = pgTable('dedications', {
   message: text('message'),
   targetDate: text('target_date').notNull(),
   hidden: boolean('hidden').notNull().default(false),
+  requestId: uuid('request_id').references(() => requests.id, { onDelete: 'set null' }),
   status: text('status').notNull().default('OCZEKUJACE'),
   rejectReason: text('reject_reason'),
   decidedBy: uuid('decided_by').references(() => admins.id, { onDelete: 'set null' }),

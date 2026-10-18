@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { dedications } from '../db/schema.js';
+import { dedications, requests } from '../db/schema.js';
 import { getTrack } from '../spotify/client.js';
 import { createRequest } from './requests.js';
 import type { SpotifyTrack } from '../spotify/types.js';
@@ -38,11 +38,12 @@ export async function createDedication(data: NewDedicationData) {
   const snap = trackSnapshot(data.track);
 
   // Automatycznie zgłoś utwór jako prośbę, żeby trafił do kolejki.
-  await createRequest({
+  const reqResult = await createRequest({
     track: data.track,
     class: 'DEDYKACJA',
     note: data.message,
   });
+  const requestId = reqResult.ok ? reqResult.request.id : null;
 
   const inserted = await db
     .insert(dedications)
@@ -53,6 +54,7 @@ export async function createDedication(data: NewDedicationData) {
       isAnonymous: data.isAnonymous,
       message: data.message,
       targetDate: data.targetDate,
+      requestId,
       status: 'OCZEKUJACE',
     })
     .returning({ id: dedications.id });
@@ -65,11 +67,15 @@ export async function listDedications(status?: string, includeHidden = false) {
   if (status && status !== 'WSZYSTKIE') conditions.push(eq(dedications.status, status));
   if (!includeHidden) conditions.push(eq(dedications.hidden, false));
   const rows = await db
-    .select()
+    .select({
+      dedication: dedications,
+      requestStatus: requests.status,
+    })
     .from(dedications)
+    .leftJoin(requests, eq(requests.id, dedications.requestId))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(dedications.targetDate, dedications.createdAt);
-  return rows;
+  return rows.map((r) => ({ ...r.dedication, requestStatus: r.requestStatus }));
 }
 
 export async function setDedicationHidden(id: string, hidden: boolean) {

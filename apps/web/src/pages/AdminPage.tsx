@@ -672,6 +672,7 @@ export function AdminPage() {
                 <span>
                   {d.trackName} — {d.artistName} · dla {d.recipientName}
                   {d.isAnonymous ? ' (anonimowo)' : ` od ${d.senderName}`} · Dzień: {d.targetDate}
+                  {d.requestStatus ? ` · prośba: ${d.requestStatus}` : ''}
                   {d.hidden ? ' · (ukryta)' : ''}
                 </span>
                 <span className="flex gap-2">
