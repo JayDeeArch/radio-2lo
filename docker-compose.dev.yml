@@ -1,0 +1,42 @@
+# Nakładka deweloperska: kodujesz na maszynie, przeładowanie w przeglądarce.
+# NIE ładuje się automatycznie (plik nie nazywa się docker-compose.override.yml,
+# bo nadpisywałby produkcyjne buildy). Uruchom jawnie:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Albo prościej - sam lokalnie:
+#   docker compose up -d db
+#   pnpm dev
+#
+# Vite (5173) proxuje /api do kontenera api. Aplikacja obserwuje pliki
+# i przeładowuje po zmianach, bez budowania obrazów.
+
+services:
+  api:
+    build: null
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+    volumes:
+      # Kod i zależności z maszyny; migracje czytane z montowanego źródła.
+      - ./apps/api/src:/app/apps/api/src:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+    command: ['node', '--watch', '--experimental-strip-types', 'apps/api/src/index.ts']
+
+  web:
+    build: null
+    ports:
+      - '${DEV_PORT:-5173}:5173'
+      # Port produkcyjny (8090 na serwerze) zostaje nietknięty.
+    volumes:
+      - ./apps/web/src:/app/apps/web/src:ro
+    entrypoint: ['sh', '-c']
+    command:
+      - >-
+        pnpm --version >/dev/null &&
+        pnpm install &&
+        pnpm --filter @radio/shared run build &&
+        pnpm --filter @radio/web run dev --host 0.0.0.0
+    environment:
+      # Vite dev server proxuje /api do kontenera `api`.
+      VITE_API_PROXY: http://api:3000

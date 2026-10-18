@@ -1,0 +1,205 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------
+   Szkolne Radio - kierunek: druk / redakcja
+   Ciepły papier, tusz, cienkie linie, cyfry tabelaryczne.
+   Świadomie bez: szkła, poświaty, gradientów i zaokrągleń 20 px.
+   Kolor niesie wyłącznie informację (status), nic dekoracyjnego.
+------------------------------------------------------------------ */
+
+@theme {
+  /* Granatowa „papier" i chłodny „tusz".
+     Nazwy pozostają semantyczne (paper = tło, ink = tekst), ale wartości
+     są ciemne i przesunięte w błękit - dlatego kontrast liczony jest
+     względem tła #0d1420, nie bieli. */
+  --color-paper: #0d1420;
+  --color-card: #141d2c;
+  --color-ink: #e9eef7;
+  --color-ink-soft: #98a7bf;
+  --color-ink-faint: #7d8ca6;
+  --color-rule: #243149;
+  --color-rule-soft: #1a2436;
+
+  /* Akcent - chłodny błękit. To „materiał" interfejsu: przyciski, linki,
+     zaznaczenie, fokus. */
+  --color-accent: #4d94f0;
+  --color-accent-soft: #16273f;
+
+  /* Statusy celowo NIE są niebieskie - błękit należy do interfejsu,
+     a te kolory niosą informację. Dzięki temu „w playliscie" da się
+     rozpoznać jednym rzutem oka. */
+  --color-live: #3ecf8e;
+  --color-live-soft: #10281e;
+  --color-wait: #e3ab3f;
+  --color-wait-soft: #2a2313;
+  --color-drop: #f0706f;
+  --color-drop-soft: #2c191c;
+
+  --font-sans: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --animate-eq: eq 0.9s ease-in-out infinite;
+  --animate-tick: tick 1.4s steps(4) infinite;
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Drobne kroki - przewijany pasek przy odtwarzaniu */
+@keyframes tick {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(4px);
+  }
+}
+
+@layer base {
+  :root {
+    /* Ciemny motyw - steruje m.in. natywnymi kontrolkami formularzy,
+       paskiem przewijania i osadzonym odtwarzaczem Spotify. */
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-paper text-ink antialiased;
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    min-height: 100dvh;
+  }
+
+  /* Delikatne włókna papieru - ledwo widoczne, ale odbiera płaskość.
+     Na ciemnym tle kropki muszą być jasne, inaczej znikają. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle at 1px 1px, #ffffff0a 1px, transparent 0);
+    background-size: 4px 4px;
+  }
+
+  ::selection {
+    @apply bg-accent/35;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-rule-soft;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-rule;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-faint;
+  }
+
+  input,
+  textarea,
+  button,
+  select {
+    font: inherit;
+  }
+}
+
+@layer components {
+  /* --- przyciski ---
+     UWAGA: warianty NIE dziedziczą z `.btn`. Tailwind 4 wygenerował z listy
+     `.btn, .btn-primary, …` wyłącznie regułę `.btn`, przez co `btn-primary`
+     używane w JSX bez klasy `btn` traciło padding i `inline-flex`.
+     Każdy wariant jest więc samowystarczalny - powtórzenie jest tu celowe. */
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-danger,
+  .btn-approve {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 border
+           px-5 py-2.5 text-sm font-semibold tracking-tight
+           transition-colors duration-100
+           disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  /* Wypełniony akcentem, nie tuszem: na ciemnym tle biały przycisk
+     byłby za agresywny na każdym ekranie. */
+  .btn-primary {
+    @apply border-accent bg-accent text-paper hover:border-accent hover:brightness-110;
+  }
+
+  .btn-ghost {
+    @apply border-rule bg-card text-ink-soft hover:border-ink hover:text-ink;
+  }
+
+  .btn-danger {
+    @apply border-drop/45 bg-drop-soft text-drop hover:border-drop hover:bg-drop hover:text-paper;
+  }
+
+  /* „Dodaj do playlisty" - akcja potwierdzająca, więc mięta, nie błękit. */
+  .btn-approve {
+    @apply border-live bg-live text-paper hover:border-live hover:brightness-110;
+  }
+
+  /* --- pola: prostokąt z linią, jak w formularzu drukowanym --- */
+  .field {
+    @apply w-full border border-rule bg-card px-4 py-3 text-ink
+           placeholder:text-ink-faint
+           focus:border-ink focus:ring-0 focus:outline-none;
+  }
+
+  .field-invalid {
+    @apply border-drop bg-drop-soft/40;
+  }
+
+  /* --- metadane: zawsze mono, zawsze wersalikami --- */
+  .meta {
+    @apply font-mono text-[0.7rem] tracking-[0.08em] text-ink-faint uppercase;
+  }
+
+  .tabnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Pozioma linia jak w druku - osobna, żeby nie walczyć z borderem komponentu. */
+  .rule {
+    @apply border-t border-rule;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

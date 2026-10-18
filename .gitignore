@@ -1,0 +1,16 @@
+node_modules
+dist
+.turbo
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+logs/
+
+# local data
+.data/
+pgdata/

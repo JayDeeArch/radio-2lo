@@ -1,0 +1,98 @@
+# Szkolne Radio - stos produkcyjny.
+#
+#   cp .env.example .env
+#   docker compose up -d --build
+#   docker compose exec api node apps/api/dist/db/seed.js   # dane demonstracyjne (opcjonalnie)
+#
+# Jedynym punktem wejścia jest nginx (port HTTP_PORT). Port bazy danych
+# i API nie są publikowane na zewnątrz - dostęp jest wyłącznie przez proxy.
+
+name: szkolne-radio
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-radio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD jest wymagany}
+      POSTGRES_DB: ${POSTGRES_DB:-radio}
+      # Polskie sortowanie i wyszukiwanie.
+      LANG: pl_PL.UTF-8
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-radio} -d ${POSTGRES_DB:-radio}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks: [radio]
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-radio}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-radio}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:?SPOTIFY_CLIENT_ID jest wymagany}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:?SPOTIFY_CLIENT_SECRET jest wymagany}
+      SPOTIFY_REDIRECT_URI: ${SPOTIFY_REDIRECT_URI:?SPOTIFY_REDIRECT_URI jest wymagany}
+      SPOTIFY_PLAYLIST_ID: ${SPOTIFY_PLAYLIST_ID:?SPOTIFY_PLAYLIST_ID jest wymagany}
+      SPOTIFY_MARKET: ${SPOTIFY_MARKET:-PL}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET jest wymagany}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-14}
+      ADMIN_SPOTIFY_IDS: ${ADMIN_SPOTIFY_IDS:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      # nginx jest jedynym frontem, więc X-Forwarded-For z jego proxy jest wiarygodny.
+      TRUST_PROXY: 'true'
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks: [radio]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '${HTTP_PORT:-8090}:80'
+    networks: [radio]
+
+  # Tunel Cloudflare - wystawia aplikację pod https://radio.jdkm.cc
+  # bez otwierania portów na routerze.
+  #
+  # Token: Cloudflare Zero Trust -> Networks -> Tunnels (karta tunelu ->
+  # "Add a public hostname" / "Install and run a connector" -> token).
+  #
+  # Uruchomienie z profilem:
+  #   docker compose --profile tunnel up -d
+  #
+  # Ponieważ to tunel zarządzany zdalnie, konfiguracja ingress (domena ->
+  # adres usługi) ustawiana jest w panelu Cloudflare, nie w tym pliku.
+  # Wskaz tam na http://web:80 - kontener jest w tej samej sieci co nginx.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN jest wymagany przy --profile tunnel}
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [radio]
+    profiles: [tunnel]
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  radio:
+    driver: bridge
