@@ -219,9 +219,17 @@ export const submitDedicationSchema = z.object({
   track: z.string().trim().min(1).max(500),
   recipient: z.string().trim().min(1).max(60),
   sender: z.string().trim().max(60).optional().default(''),
-  anonymous: z.boolean().optional().default(false),
+  anonymous: z.preprocess((v) => v === true || v === 'true' || v === '1' || v === 'on', z.boolean()).optional().default(false),
   message: z.string().trim().max(280).optional().default(''),
-  targetDate: z.string().date(),
+  targetDate: z.preprocess((v) => {
+    if (typeof v !== 'string') return v;
+    const sep = v.includes('/') ? '/' : v.includes('.') ? '.' : null;
+    if (sep) {
+      const [d, mm, y] = v.split(sep);
+      if (y && mm && d) return `${y}-${mm.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    return v.trim();
+  }, z.string().date()),
 });
 export type SubmitDedicationInput = z.infer<typeof submitDedicationSchema>;
 
