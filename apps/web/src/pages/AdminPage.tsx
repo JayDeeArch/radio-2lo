@@ -157,11 +157,18 @@ export function AdminPage() {
     enabled: me.isSuccess,
   });
 
+  const [dedicationStatus, setDedicationStatus] = useState<string>('WSZYSTKIE');
+  const [showHiddenDedications, setShowHiddenDedications] = useState(false);
   const adminDedications = useQuery({
     queryKey: ['admin-dedications'],
     queryFn: ({ signal }) => api.adminDedications('WSZYSTKIE', signal),
     enabled: me.isSuccess,
   });
+
+  const filteredDedications = (adminDedications.data?.items ?? [])
+    .filter((d: any) => (dedicationStatus === 'WSZYSTKIE' ? true : d.status === dedicationStatus))
+    .filter((d: any) => (showHiddenDedications ? true : !d.hidden))
+    .sort((a: any, b: any) => String(a.targetDate).localeCompare(String(b.targetDate)));
 
   useEffect(
     () =>
@@ -632,11 +639,35 @@ export function AdminPage() {
       {/* Dedykacje oczekujące */}
       {adminDedications.data && adminDedications.data.items.length > 0 && (
         <section className="mt-12 border border-rule bg-card p-5">
-          <h2 className="text-sm font-bold tracking-tight">
-            Dedykacje ({adminDedications.data.items.length})
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-sm font-bold tracking-tight">
+              Dedykacje ({filteredDedications.length})
+            </h2>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              {['WSZYSTKIE', 'OCZEKUJACE', 'ZATWIERDZONE', 'ODRZUCONE'].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setDedicationStatus(s)}
+                  className={`meta px-2 py-1 border ${
+                    dedicationStatus === s ? 'bg-ink text-paper border-ink' : 'border-rule text-ink-soft'
+                  }`}
+                >
+                  {s === 'WSZYSTKIE' ? 'Wszystkie' : s}
+                </button>
+              ))}
+              <label className="meta flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={showHiddenDedications}
+                  onChange={(e) => setShowHiddenDedications(e.target.checked)}
+                />
+                Pokaż ukryte
+              </label>
+            </div>
+          </div>
           <ul className="mt-3 space-y-2.5">
-            {adminDedications.data.items.map((d: any) => (
+            {filteredDedications.map((d: any) => (
               <li key={d.id} className="flex items-center justify-between gap-3 text-sm">
                 <span>
                   {d.trackName} — {d.artistName} · dla {d.recipientName}
