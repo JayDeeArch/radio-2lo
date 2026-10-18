@@ -193,6 +193,19 @@
   }
 }
 
+@media (max-width: 640px) {
+  .field {
+    font-size: 16px;
+  }
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-danger,
+  .btn-approve {
+    min-height: 44px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

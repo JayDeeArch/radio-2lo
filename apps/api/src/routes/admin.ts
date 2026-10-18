@@ -19,7 +19,7 @@ import {
 } from '../services/requests.js';
 import { listOrphanTracks, runSync } from '../services/sync.js';
 import { addAllowedAdmin, listAllowedAdmins, removeAllowedAdmin } from '../services/admins.js';
-import { listDedications, approveDedication, rejectDedication, undoDedication, getDedication } from '../services/dedications.js';
+import { listDedications, approveDedication, rejectDedication, undoDedication, getDedication, setDedicationHidden } from '../services/dedications.js';
 
 const uuidParam = z.object({ id: z.string().uuid('Nieprawidłowy identyfikator prośby.') });
 
@@ -155,7 +155,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
 
   app.get<{ Querystring: unknown }>('/api/admin/dedications', async (request, reply) => {
     const status = (request.query as { status?: string })?.status ?? 'WSZYSTKIE';
-    const rows = await listDedications(status);
+    const rows = await listDedications(status, true);
     return { items: rows };
   });
 
@@ -173,9 +173,10 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     return { ok: true };
   });
 
-  app.post<{ Params: unknown }>('/api/admin/dedications/:id/undo', async (request, reply) => {
+  app.post<{ Params: unknown; Body: unknown }>('/api/admin/dedications/:id/hide', async (request, reply) => {
     const id = z.string().uuid().parse((request.params as { id: string }).id);
-    await undoDedication(id);
+    const body = z.object({ hidden: z.boolean().optional().default(true) }).safeParse(request.body ?? {});
+    await setDedicationHidden(id, body.success ? body.data.hidden : true);
     return { ok: true };
   });
 

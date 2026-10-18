@@ -49,7 +49,7 @@ export function App() {
             </span>
           </NavLink>
 
-          <nav className="no-scrollbar ml-auto flex items-center gap-1 overflow-x-auto">
+          <nav className="ml-auto flex flex-wrap items-center gap-1">
             {NAV.map((item) => (
               <NavLink
                 key={item.to}

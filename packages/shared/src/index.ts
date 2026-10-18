@@ -220,7 +220,7 @@ export const submitDedicationSchema = z.object({
   recipient: z.string().trim().min(1).max(60),
   sender: z.string().trim().max(60).optional().default(''),
   anonymous: z.preprocess((v) => v === true || v === 'true' || v === '1' || v === 'on', z.boolean()).optional().default(false),
-  message: z.string().trim().max(280).optional().default(''),
+  message: z.string().trim().max(1000).optional().default(''),
   targetDate: z.preprocess((v) => {
     if (typeof v !== 'string') return v;
     const sep = v.includes('/') ? '/' : v.includes('.') ? '.' : null;

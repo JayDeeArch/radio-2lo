@@ -131,7 +131,7 @@ export function DedicationsPage() {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              maxLength={280}
+              maxLength={1000}
               className="field w-full px-3 py-2 text-sm"
             />
 

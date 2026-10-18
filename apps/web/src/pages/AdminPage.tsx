@@ -668,6 +668,17 @@ export function AdminPage() {
                   >
                     Odrzuć
                   </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void api.hideDedication(d.id, true).then(() => {
+                        void queryClient.invalidateQueries({ queryKey: ['admin-dedications'] });
+                      })
+                    }
+                    className="btn-ghost !px-3 !py-1 !text-xs"
+                  >
+                    Ukryj
+                  </button>
                 </span>
               </li>
             ))}

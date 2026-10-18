@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { dedications } from '../db/schema.js';
 import { getTrack } from '../spotify/client.js';
@@ -60,13 +60,20 @@ export async function createDedication(data: NewDedicationData) {
   return inserted[0]!.id;
 }
 
-export async function listDedications(status?: string) {
+export async function listDedications(status?: string, includeHidden = false) {
+  const conditions = [];
+  if (status && status !== 'WSZYSTKIE') conditions.push(eq(dedications.status, status));
+  if (!includeHidden) conditions.push(eq(dedications.hidden, false));
   const rows = await db
     .select()
     .from(dedications)
-    .where(status && status !== 'WSZYSTKIE' ? eq(dedications.status, status) : undefined)
+    .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(dedications.targetDate, dedications.createdAt);
   return rows;
+}
+
+export async function setDedicationHidden(id: string, hidden: boolean) {
+  await db.update(dedications).set({ hidden, updatedAt: new Date() }).where(eq(dedications.id, id));
 }
 
 export async function getDedication(id: string) {

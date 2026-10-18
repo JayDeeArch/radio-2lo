@@ -179,6 +179,7 @@ export const dedications = pgTable('dedications', {
   isAnonymous: boolean('is_anonymous').notNull().default(false),
   message: text('message'),
   targetDate: text('target_date').notNull(),
+  hidden: boolean('hidden').notNull().default(false),
   status: text('status').notNull().default('OCZEKUJACE'),
   rejectReason: text('reject_reason'),
   decidedBy: uuid('decided_by').references(() => admins.id, { onDelete: 'set null' }),

@@ -250,6 +250,12 @@ export const api = {
   undoDedication: (id: string) =>
     request<{ ok: true }>(`/admin/dedications/${id}/undo`, { method: 'POST' }),
 
+  hideDedication: (id: string, hidden = true) =>
+    request<{ ok: true }>(`/admin/dedications/${id}/hide`, {
+      method: 'POST',
+      body: JSON.stringify({ hidden }),
+    }),
+
   history: (id: string, signal?: AbortSignal) =>
     request<{ request: RequestDto; history: HistoryEntry[]; votes: VoteEntry[] }>(
       `/admin/requests/${id}`,
