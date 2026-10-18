@@ -159,7 +159,7 @@ export function AdminPage() {
 
   const adminDedications = useQuery({
     queryKey: ['admin-dedications'],
-    queryFn: ({ signal }) => api.adminDedications('OCZEKUJACE', signal),
+    queryFn: ({ signal }) => api.adminDedications('WSZYSTKIE', signal),
     enabled: me.isSuccess,
   });
 
@@ -633,7 +633,7 @@ export function AdminPage() {
       {adminDedications.data && adminDedications.data.items.length > 0 && (
         <section className="mt-12 border border-rule bg-card p-5">
           <h2 className="text-sm font-bold tracking-tight">
-            Dedykacje oczekujące ({adminDedications.data.items.length})
+            Dedykacje ({adminDedications.data.items.length})
           </h2>
           <ul className="mt-3 space-y-2.5">
             {adminDedications.data.items.map((d: any) => (
@@ -641,6 +641,7 @@ export function AdminPage() {
                 <span>
                   {d.trackName} — {d.artistName} · dla {d.recipientName}
                   {d.isAnonymous ? ' (anonimowo)' : ` od ${d.senderName}`} · Dzień: {d.targetDate}
+                  {d.hidden ? ' · (ukryta)' : ''}
                 </span>
                 <span className="flex gap-2">
                   <button
@@ -668,17 +669,31 @@ export function AdminPage() {
                   >
                     Odrzuć
                   </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void api.hideDedication(d.id, true).then(() => {
-                        void queryClient.invalidateQueries({ queryKey: ['admin-dedications'] });
-                      })
-                    }
-                    className="btn-ghost !px-3 !py-1 !text-xs"
-                  >
-                    Ukryj
-                  </button>
+                  {d.hidden ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void api.hideDedication(d.id, false).then(() => {
+                          void queryClient.invalidateQueries({ queryKey: ['admin-dedications'] });
+                        })
+                      }
+                      className="btn-ghost !px-3 !py-1 !text-xs"
+                    >
+                      Pokaż
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void api.hideDedication(d.id, true).then(() => {
+                          void queryClient.invalidateQueries({ queryKey: ['admin-dedications'] });
+                        })
+                      }
+                      className="btn-ghost !px-3 !py-1 !text-xs"
+                    >
+                      Ukryj
+                    </button>
+                  )}
                 </span>
               </li>
             ))}
