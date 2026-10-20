@@ -225,8 +225,8 @@ export async function publicRoutes(app: FastifyInstance): Promise<void> {
    * zostały usunięte w lutym 2026.
    */
   app.get('/api/classes', async () => ({
-    format: /^([1-8])\s*([A-ZĄĆĘŁŃÓŚŹŻ]{1,2})$/u,
-    examples: ['2A', '3B', '4F'],
+    format: /^([1-4])\s*([A-F]{1,2})$/i,
+    examples: ['1A', '2B', '3C', '4F'],
     normalizedSearch: stripDiacritics('2A'),
   }));
 

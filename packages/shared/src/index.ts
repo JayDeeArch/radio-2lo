@@ -21,7 +21,7 @@ export const STATUS_LABEL: Record<RequestStatus, string> = {
 };
 
 /** Klasa w polskim znaczeniu: 2A, 3B, 4F, 1C ... (cyfra + 1-2 duże litery). */
-export const CLASS_PATTERN = /^([1-8])\s*([A-ZĄĆĘŁŃÓŚŹŻ]{1,2})$/u;
+export const CLASS_PATTERN = /^([1-4])\s*([A-F]{1,2})$/i;
 
 export const classSchema = z
   .string()
